@@ -76,58 +76,97 @@ def authenticate():
             # cookie_manager.delete('classroom_token') # Can be buggy in some versions
             pass
 
-    # 4. If not logged in, show Login Button
+    # 4. If not logged in, handle OAuth flow
     if 'credentials' not in st.session_state:
-        st.markdown("""
-        <div style="text-align: center; margin-top: 50px;">
-            <h2>👋 Welcome to Classroom Assistant</h2>
-            <p>Please sign in to access your courses.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Check if we're returning from OAuth (code in URL)
+        query_params = st.query_params
         
-        # Create Flow
-        if os.path.exists('credentials.json'):
-            flow = Flow.from_client_secrets_file(
-                'credentials.json',
-                scopes=SCOPES,
-                redirect_uri='urn:ietf:wg:oauth:2.0:oob'
-            )
-        elif 'google_credentials' in st.secrets:
-            # Load from Streamlit Secrets (for Cloud Deployment)
-            client_config = json.loads(st.secrets['google_credentials'])
-            flow = Flow.from_client_config(
-                client_config,
-                scopes=SCOPES,
-                redirect_uri='urn:ietf:wg:oauth:2.0:oob'
-            )
+        if 'code' in query_params:
+            # Step 2: Exchange code for token
+            auth_code = query_params['code']
+            
+            # Recreate flow to exchange code
+            if os.path.exists('credentials.json'):
+                flow = Flow.from_client_secrets_file(
+                    'credentials.json',
+                    scopes=SCOPES,
+                    redirect_uri=st.query_params.get('redirect_uri', 'http://localhost:8501')
+                )
+            elif 'google_credentials' in st.secrets:
+                client_config = json.loads(st.secrets['google_credentials'])
+                # Detect Streamlit Cloud URL
+                redirect_uri = f"https://{st.context.headers.get('Host', 'localhost:8501')}"
+                flow = Flow.from_client_config(
+                    client_config,
+                    scopes=SCOPES,
+                    redirect_uri=redirect_uri
+                )
+            else:
+                st.error("❌ Missing Credentials!")
+                st.stop()
+            
+            try:
+                flow.fetch_token(code=auth_code)
+                creds = flow.credentials
+                
+                # Save to Session
+                st.session_state.credentials = creds
+                
+                # Save to Cookie (Remember Me)
+                cookie_manager = get_cookie_manager()
+                cookie_manager.set('classroom_token', creds.to_json(), key="new_token")
+                
+                # Clear query params and reload
+                st.query_params.clear()
+                st.success("✅ Successfully signed in!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Authentication failed: {str(e)}")
+                st.stop()
+        
         else:
-            st.error("❌ Missing Credentials! Please upload 'credentials.json' or add 'google_credentials' to Streamlit Secrets.")
-            st.stop()
-        
-        auth_url, _ = flow.authorization_url(prompt='consent')
-        
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.link_button("🔐 Sign in with Google", auth_url, use_container_width=True)
+            # Step 1: Show login button
+            st.markdown("""
+            <div style="text-align: center; margin-top: 50px;">
+                <h2>👋 Welcome to EasyClassroom</h2>
+                <p>Please sign in to access your courses.</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            auth_code = st.text_input("Paste the code from Google here:", type="password")
-            
-            if auth_code:
+            # Create Flow with proper redirect URI
+            if os.path.exists('credentials.json'):
+                redirect_uri = 'http://localhost:8501'
+                flow = Flow.from_client_secrets_file(
+                    'credentials.json',
+                    scopes=SCOPES,
+                    redirect_uri=redirect_uri
+                )
+            elif 'google_credentials' in st.secrets:
+                # Detect Streamlit Cloud URL
                 try:
-                    flow.fetch_token(code=auth_code)
-                    creds = flow.credentials
-                    
-                    # Save to Session
-                    st.session_state.credentials = creds
-                    
-                    # Save to Cookie (Remember Me)
-                    cookie_manager.set('classroom_token', creds.to_json(), key="new_token")
-                    
-                    st.success("Successfully signed in! Reloading...")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Authentication failed: {str(e)}")
-                    
+                    host = st.context.headers.get('Host', '')
+                    redirect_uri = f"https://{host}" if host else "http://localhost:8501"
+                except:
+                    redirect_uri = "http://localhost:8501"
+                
+                client_config = json.loads(st.secrets['google_credentials'])
+                flow = Flow.from_client_config(
+                    client_config,
+                    scopes=SCOPES,
+                    redirect_uri=redirect_uri
+                )
+            else:
+                st.error("❌ Missing Credentials! Please add 'google_credentials' to Streamlit Secrets.")
+                st.stop()
+            
+            auth_url, _ = flow.authorization_url(prompt='consent')
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.link_button("🔐 Sign in with Google", auth_url, use_container_width=True)
+                st.caption("Click the button above to sign in")
+            
         st.stop() # Stop execution until logged in
+
 
     return None
