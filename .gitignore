@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Google Auth (CRITICAL - NEVER UPLOAD)
+token.json
+credentials.json
+client_secret_*.json
+
+# User Data & Notes
+Notes/
+Downloads/
+classroom_assistant_backup_*/
+users_db.json
+*.db
+
+# Guides & Scripts
+DEPLOYMENT_GUIDE.md
+QUICK_START.md
+SUCCESS.md
+START_CLASSROOM_ASSISTANT.bat
+setup_admin.py
+*.bat
+*.sh
+
+# System
+.DS_Store
+Thumbs.db
+.env

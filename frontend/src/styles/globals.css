@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass morphism card */
+  .glass-card {
+    @apply bg-surface/30 backdrop-blur-md border border-white/10 rounded-xl p-6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-primary text-background px-4 py-2 rounded-lg font-medium transition-all hover:bg-primary/90 hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-text px-4 py-2 rounded-lg font-medium transition-all hover:bg-secondary/90;
+  }
+
+  .btn-danger {
+    @apply bg-danger text-text px-4 py-2 rounded-lg font-medium transition-all hover:bg-danger/90;
+  }
+
+  /* Calendar grid */
+  .calendar-grid {
+    @apply grid grid-cols-7 gap-2;
+  }
+
+  .calendar-day {
+    @apply min-h-[100px] p-2 bg-surface/30 border border-white/10 rounded-lg cursor-pointer transition-all hover:border-primary/50;
+  }
+
+  .calendar-day.today {
+    @apply border-primary border-2;
+  }
+}

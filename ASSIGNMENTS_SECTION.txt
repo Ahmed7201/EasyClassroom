@@ -1,0 +1,102 @@
+# Add this code AFTER line 228 in 4_Calendar.py (after the calendar grid, before TAB 2)
+
+        # ========== ASSIGNMENTS CALENDAR SECTION ==========
+        st.divider()
+        st.header("📚 Assignments Manager")
+        
+        # Get all classroom assignments
+        courses = classroom_client.get_courses()
+        all_assignments = []
+        
+        for course in courses:
+            works = classroom_client.get_course_work(course['id'])
+            for work in works:
+                if work.get('deadline'):  # Only assignments with deadlines
+                    work['course_name'] = course['name']
+                    work['course_id'] = course['id']
+                    all_assignments.append(work)
+        
+        # Filters
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            filter_course = st.selectbox("Filter by Course", ["All Courses"] + [c['name'] for c in courses])
+        
+        with col2:
+            filter_status = st.selectbox("Status", ["All", "Upcoming", "Overdue", "This Week"])
+        
+        with col3:
+            sort_by = st.selectbox("Sort by", ["Due Date", "Course Name", "Posted Date"])
+        
+        # Apply filters
+        now = datetime.now(pytz.utc)
+        filtered = all_assignments.copy()
+        
+        if filter_course != "All Courses":
+            filtered = [a for a in filtered if a['course_name'] == filter_course]
+        
+        if filter_status == "Upcoming":
+            filtered = [a for a in filtered if a['deadline'] > now]
+        elif filter_status == "Overdue":
+            filtered = [a for a in filtered if a['deadline'] < now]
+        elif filter_status == "This Week":
+            week_end = now + timedelta(days=7)
+            filtered = [a for a in filtered if now < a['deadline'] <= week_end]
+        
+        # Sort
+        if sort_by == "Due Date":
+            filtered.sort(key=lambda x: x['deadline'])
+        elif sort_by == "Course Name":
+            filtered.sort(key=lambda x: x['course_name'])
+        
+        st.write(f"**{len(filtered)} assignments**")
+        
+        # Display assignments
+        for idx, assignment in enumerate(filtered):
+            days_left = (assignment['deadline'] - now).days
+            
+            if days_left < 0:
+                urgency_color = "red"
+                urgency_text = "🔴 OVERDUE"
+            elif days_left <= 2:
+                urgency_color = "orange"
+                urgency_text = f"🟠 {days_left} days"
+            else:
+                urgency_color = "green"
+                urgency_text = f"🟢 {days_left} days"
+            
+            with st.expander(f"{urgency_text} | {assignment['course_name']} - {assignment['title']}", expanded=False):
+                cairo_tz = pytz.timezone('Africa/Cairo')
+                local_time = assignment['deadline'].astimezone(cairo_tz)
+                
+                st.write(f"**Due:** {local_time.strftime('%B %d, %Y at %I:%M %p')}")
+                st.write(f"**Type:** {assignment.get('type', 'ASSIGNMENT')}")
+                
+                # Action buttons
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    if st.button("📅 Add to Calendar", key=f"cal_{idx}"):
+                        event_id, _ = calendar_client.create_event(
+                            assignment['title'],
+                            assignment.get('description', ''),
+                            assignment['deadline'] - timedelta(hours=6),
+                            assignment['deadline'],
+                            assignment['course_name'],
+                            assignment.get('type', 'ASSIGNMENT')
+                        )
+                        if event_id:
+                            st.success("Added!")
+                
+                with col2:
+                    if st.button("✅ Mark Done", key=f"done_{idx}"):
+                        st.success("Marked as complete!")
+                
+                with col3:
+                    if st.button("🔗 Open Link", key=f"link_{idx}"):
+                        if assignment.get('link'):
+                            st.markdown(f"[Open Assignment]({assignment['link']})")
+                
+                with col4:
+                    if st.button("🗑️ Delete", key=f"del_assign_{idx}"):
+                        st.warning("Removed from view")

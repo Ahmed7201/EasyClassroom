@@ -1,0 +1,77 @@
+[
+    {
+        "keywords": ["cie 239", "digital design", "computer architecture"],
+        "policy": {
+            "Lab Participation": 0.05,
+            "Quizzes": 0.15,
+            "Assignments": 0.10,
+            "Midterm Exam": 0.20,
+            "Project": 0.10,
+            "Final Exam": 0.40
+        },
+        "rules": {
+            "Quizzes": "best 2 of 3",
+            "Assignments": "best 4 of 5"
+        }
+    },
+    {
+        "keywords": ["cie 206", "database"],
+        "policy": {
+            "Lab": 0.05,
+            "Quizzes": 0.05,
+            "Lab Exam": 0.10,
+            "Midterm Exam": 0.20,
+            "Project": 0.20,
+            "Final Exam": 0.40
+        }
+    },
+    {
+        "keywords": ["math 201", "linear algebra", "vector geometry"],
+        "policy": {
+            "Quizzes": 0.15,
+            "Assignments": 0.10,
+            "Midterm Exam": 0.20,
+            "Project": 0.15,
+            "Final Exam": 0.40
+        }
+    },
+    {
+        "keywords": ["math 202", "differential equations", "ode"],
+        "policy": {
+            "Quizzes": 0.15,
+            "Assignments": 0.10,
+            "Midterm Exam": 0.20,
+            "Project": 0.15,
+            "Final Exam": 0.40
+        },
+        "rules": {
+            "Quizzes": "best 2 of 3",
+            "Assignments": "best 4 of 5"
+        }
+    },
+    {
+        "keywords": ["cie 205", "data structures", "dsa"],
+        "policy": {
+            "Quizzes": 0.10,
+            "Lab Assignments": 0.06,
+            "Lab Exam": 0.09,
+            "Midterm Exam": 0.20,
+            "Project": 0.15,
+            "Final Exam": 0.40
+        }
+    },
+    {
+        "keywords": ["cie 227", "signals", "systems"],
+        "policy": {
+            "Assignments": 0.07,
+            "Quizzes": 0.08,
+            "Attendance": 0.05,
+            "Project": 0.20,
+            "Midterm Exam": 0.20,
+            "Final Exam": 0.40
+        },
+        "rules": {
+            "Quizzes": "best 3 of 4"
+        }
+    }
+]
