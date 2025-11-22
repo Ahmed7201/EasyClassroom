@@ -356,7 +356,9 @@ def main():
                                 urgency_text = "No Deadline"
 
                         # Construct Metadata HTML
-                        meta_parts = [f"<b>Type:</b> {work['type']}{f' #{work['index']}' if work['index'] else ''}"]
+                        # Construct Metadata HTML
+                        index_str = f" #{work['index']}" if work.get('index') else ""
+                        meta_parts = [f"<b>Type:</b> {work['type']}{index_str}"]
                         if work['topic']:
                             meta_parts.append(f"<b>Topic:</b> {work['topic']}")
                         if local_deadline:
