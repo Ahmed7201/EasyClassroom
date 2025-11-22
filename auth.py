@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 import json
+from datetime import datetime, timedelta
 
 # Relax scope validation
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
@@ -55,11 +56,10 @@ def authenticate():
                 st.session_state.credentials = None
 
     # 3. Check Cookies (Remember Me)
-    # Note: We store the full token JSON in the cookie for simplicity in this "Universal" app.
-    # In a high-security production app, we would store a session ID and keep tokens in a DB.
+    # Note: Cookie manager needs to be ready before we can read cookies
     token_cookie = cookie_manager.get('classroom_token')
     
-    if token_cookie:
+    if token_cookie and token_cookie != 'null':
         try:
             # Reconstruct credentials from cookie
             token_data = json.loads(token_cookie)
@@ -70,13 +70,17 @@ def authenticate():
                 return creds
             
             if creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-                st.session_state.credentials = creds
-                cookie_manager.set('classroom_token', creds.to_json(), key="refresh_cookie")
-                return creds
+                try:
+                    creds.refresh(Request())
+                    st.session_state.credentials = creds
+                    # Update cookie with refreshed token (30 days expiry)
+                    cookie_manager.set('classroom_token', creds.to_json(), expires_at=datetime.now() + timedelta(days=30), key="refresh_cookie")
+                    return creds
+                except:
+                    # Refresh failed, clear invalid cookie
+                    pass
         except Exception as e:
-            # Invalid cookie, clear it
-            # cookie_manager.delete('classroom_token') # Can be buggy in some versions
+            # Invalid cookie, ignore it
             pass
 
     # 4. If not logged in, handle OAuth flow
@@ -120,9 +124,9 @@ def authenticate():
                 # Save to Session
                 st.session_state.credentials = creds
                 
-                # Save to Cookie (Remember Me)
+                # Save to Cookie (Remember Me - 30 days)
                 cookie_manager = get_cookie_manager()
-                cookie_manager.set('classroom_token', creds.to_json(), key="new_token")
+                cookie_manager.set('classroom_token', creds.to_json(), expires_at=datetime.now() + timedelta(days=30), key="new_token")
                 
                 st.success("✅ Successfully signed in!")
                 st.rerun()
