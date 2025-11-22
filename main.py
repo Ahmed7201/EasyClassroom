@@ -43,8 +43,20 @@ def main():
                 'id': course['id'],
                 'name': course['name'],
                 'works': works
-            })
+            }
         return data
+
+    # Theme Colors
+    is_light = st.session_state.current_theme == 'light'
+    accent_color = "#2563eb" if is_light else "#bd93f9"
+    btn_gradient = "linear-gradient(135deg, #2563eb 0%, #0891b2 100%)" if is_light else "linear-gradient(135deg, #bd93f9 0%, #6272a4 100%)"
+    shadow_rgba = "rgba(37, 99, 235, 0.3)" if is_light else "rgba(189, 147, 249, 0.3)"
+    
+    # Authentication (Handled by auth.py with Cookies)
+    creds = authenticate()
+    
+    # If authenticate returns, we are logged in
+    client = ClassroomClient(creds)
 
     # Sidebar Profile & Settings
     with st.sidebar:
