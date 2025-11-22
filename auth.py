@@ -25,7 +25,10 @@ SCOPES = [
 ]
 
 def get_cookie_manager():
-    return stx.CookieManager()
+    """Singleton cookie manager to avoid duplicate key errors"""
+    if 'cookie_manager' not in st.session_state:
+        st.session_state.cookie_manager = stx.CookieManager()
+    return st.session_state.cookie_manager
 
 def authenticate():
     """
@@ -105,8 +108,13 @@ def authenticate():
                 st.error("❌ Missing Credentials!")
                 st.stop()
             
+            
             try:
-                flow.fetch_token(code=auth_code)
+                # Clear query params FIRST to prevent reuse
+                auth_code_copy = auth_code
+                st.query_params.clear()
+                
+                flow.fetch_token(code=auth_code_copy)
                 creds = flow.credentials
                 
                 # Save to Session
@@ -116,8 +124,6 @@ def authenticate():
                 cookie_manager = get_cookie_manager()
                 cookie_manager.set('classroom_token', creds.to_json(), key="new_token")
                 
-                # Clear query params and reload
-                st.query_params.clear()
                 st.success("✅ Successfully signed in!")
                 st.rerun()
             except Exception as e:
