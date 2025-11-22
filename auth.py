@@ -86,11 +86,23 @@ def authenticate():
         """, unsafe_allow_html=True)
         
         # Create Flow
-        flow = Flow.from_client_secrets_file(
-            'credentials.json',
-            scopes=SCOPES,
-            redirect_uri='urn:ietf:wg:oauth:2.0:oob' # Out of Band (Copy-Paste) for Universal Compatibility
-        )
+        if os.path.exists('credentials.json'):
+            flow = Flow.from_client_secrets_file(
+                'credentials.json',
+                scopes=SCOPES,
+                redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+            )
+        elif 'google_credentials' in st.secrets:
+            # Load from Streamlit Secrets (for Cloud Deployment)
+            client_config = json.loads(st.secrets['google_credentials'])
+            flow = Flow.from_client_config(
+                client_config,
+                scopes=SCOPES,
+                redirect_uri='urn:ietf:wg:oauth:2.0:oob'
+            )
+        else:
+            st.error("❌ Missing Credentials! Please upload 'credentials.json' or add 'google_credentials' to Streamlit Secrets.")
+            st.stop()
         
         auth_url, _ = flow.authorization_url(prompt='consent')
         
