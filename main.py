@@ -43,7 +43,7 @@ def main():
                 'id': course['id'],
                 'name': course['name'],
                 'works': works
-            }
+            })
         return data
 
     # Theme Colors
